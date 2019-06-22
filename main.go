@@ -43,7 +43,7 @@ func main() {
 	grpcAddr := fmt.Sprintf("%s:%d", env.GrpcServerHost, env.GrpcServerPort)
 	logger.Info("Connecting to gRPC service...", zap.String("grpc_addr", grpcAddr))
 
-	conn, err := grpc.Dial(grpcAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(grpcAddr, grpc.WithBlock())
 	if err != nil {
 		logger.Fatal("Could not connect to gRPC service", zap.String("grpc_addr", grpcAddr))
 	}
