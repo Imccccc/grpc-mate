@@ -45,7 +45,15 @@ func (s *Server) IntrospectHandler(client GrpcClient) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadGateway)
 			return
 		}
-		response, err := client.Introspect()
+
+		fuzzy := r.URL.Get("q")
+		var response []byte
+		var err error
+		if len(fuzzy) == 0 {
+			response, err := client.Introspect()
+		} else {
+			response, err := client.IntrospectSearch(fuzzy)
+		}
 		if err != nil {
 			returnError(w, errors.Cause(err).(perrors.Error))
 			s.logger.Error("error in introspection",
@@ -57,6 +65,42 @@ func (s *Server) IntrospectHandler(client GrpcClient) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Write(response)
 		return
+	}
+}
+
+// SearchHandler handler all search request that filter with params q
+// if q appears multiple times, the first q will be applied
+func (s *Server) SearchHandler(client GrpcClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if !client.IsReady() {
+			w.WriteHeader(http.StatusBadGateway)
+			return
+		}
+
+		query := r.URL.Query()
+
+		fuzzy := query.Get("q")
+		if len(fuzzy) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		response, err := client.IntrospectSearch(fuzzy)
+
+		if err != nil {
+			returnError(w, errors.Cause(err).(perrors.Error))
+			s.logger.Error("error in introspection",
+				zap.String("err", err.Error()))
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(response)
 	}
 }
 

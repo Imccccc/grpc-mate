@@ -19,6 +19,7 @@ type GrpcClient interface {
 		md *metadata.Metadata,
 	) (response []byte, err error)
 	Introspect() (response []byte, err error)
+	IntrospectSearch(fuzzy string) (response []byte, err error)
 }
 
 // Server is a grpc-mate server
