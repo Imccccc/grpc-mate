@@ -133,7 +133,8 @@ func (p *Proxy) IntrospectSearch(fuzzy string) ([]byte, error) {
 	// typeDscs holds a message name to MessageDescriptor mappings without duplicates
 	typeDscs := make(map[string]*reflection.MessageDescriptor)
 
-	methods := make([]*methodElement, 10)
+	var methods []*methodElement
+	// methods := make([]*methodElement)
 	for _, svc := range s {
 		mds, err := p.reflector.DescribeService(svc)
 		if err != nil {
