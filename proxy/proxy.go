@@ -206,7 +206,8 @@ func resolveMethodElement(svc string, md *reflection.MethodDescriptor,
 // check the fuzzy in it or not
 func matchFuzzy(name string, fuzzy string) bool {
 	lowCaseName := strings.ToLower(name)
-	return strings.Contains(lowCaseName, fuzzy)
+	lowCaseFuzzay := strings.ToLower(fuzzy)
+	return strings.Contains(lowCaseName, lowCaseFuzzay)
 }
 
 // IntrospectionResponse represents a introspection response
