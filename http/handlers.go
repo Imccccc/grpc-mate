@@ -45,14 +45,11 @@ func (s *Server) IntrospectHandler(client GrpcClient) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadGateway)
 			return
 		}
-		fuzzy := r.URL.Query().Get("q")
-		var response []byte
-		var err error
-		if len(fuzzy) == 0 {
-			response, err = client.Introspect()
-		} else {
-			response, err = client.IntrospectSearch(fuzzy)
-		}
+		query := r.URL.Query()
+		sfk := query.Get("name")   // service filter keyword
+		mfk := query.Get("method") // method filter keyword
+
+		response, err := client.Introspect(sfk, mfk)
 		if err != nil {
 			returnError(w, errors.Cause(err).(perrors.Error))
 			s.logger.Error("error in introspection",

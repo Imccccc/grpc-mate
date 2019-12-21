@@ -18,7 +18,7 @@ type GrpcClient interface {
 		message []byte,
 		md *metadata.Metadata,
 	) (response []byte, err error)
-	Introspect() (response []byte, err error)
+	Introspect(sfk string, mfk string) (response []byte, err error)
 	IntrospectSearch(fuzzy string) (response []byte, err error)
 }
 

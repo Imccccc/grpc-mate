@@ -66,9 +66,8 @@ func (p *Proxy) Invoke(ctx context.Context,
 	return m, err
 }
 
-// Introspect performs instrospection on this gRPC server, and obtains all services and methods
-// information
-func (p *Proxy) Introspect() ([]byte, error) {
+// Introspect performs instrospection on this gRPC server, and obtains all services and methods information
+func (p *Proxy) Introspect(sfk string, mfk string) ([]byte, error) {
 	if !p.IsReady() {
 		return nil, &perrors.ProxyError{
 			Code:    perrors.UpstreamConnFailure,
@@ -79,26 +78,34 @@ func (p *Proxy) Introspect() ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list services")
 	}
-	ses := make([]*serviceElement, len(s))
+	ses := make([]*serviceElement, 0)
 	// typeDscs holds a message name to MessageDescriptor mappings without duplicates
 	typeDscs := make(map[string]*reflection.MessageDescriptor)
 	r := &IntrospectionResponse{
 		Services: ses,
 	}
-	for i, svc := range s {
+	for _, svc := range s {
+		if len(sfk) > 0 && strings.ToLower(sfk) != strings.ToLower(svc) { // has sfk and and matched
+			continue
+		}
+
 		mds, err := p.reflector.DescribeService(svc)
 		if err != nil {
 			return nil, err
 		}
-		methods := make([]*methodElement, len(mds))
-		for j, m := range mds {
-			methods[j] = resolveMethodElement(svc, m, typeDscs)
+		methods := make([]*methodElement, 0)
+		for _, m := range mds {
+			if len(mfk) > 0 && strings.ToLower(mfk) != strings.ToLower(m.GetName()) {
+				continue
+			}
+			method := resolveMethodElement(svc, m, typeDscs)
+			methods = append(methods, method)
 		}
 		se := &serviceElement{
 			Name:    svc,
 			Methods: methods,
 		}
-		r.Services[i] = se
+		r.Services = append(r.Services, se)
 	}
 
 	var types []*typeElement
@@ -158,9 +165,6 @@ func (p *Proxy) IntrospectSearch(fuzzy string) ([]byte, error) {
 		te, err := resolveTypeElement(k, v, p.descSource)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve type "+k)
-		}
-		if !matchFuzzy(k, fuzzy) {
-			continue
 		}
 		types = append(types, te)
 	}
