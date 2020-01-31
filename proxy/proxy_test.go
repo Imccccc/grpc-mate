@@ -95,7 +95,7 @@ func TestIntrospect(t *testing.T) {
 	fd := test.NewFileDescriptor(t, test.File)
 	p.reflector = reflection.NewReflector(&test.MockGrpcreflectClient{FileDescriptor: fd})
 
-	_, err = p.Introspect()
+	_, err = p.Introspect("", "")
 	if err == nil {
 		t.Fatalf("err should not be nil, got %s", err.Error())
 	}
